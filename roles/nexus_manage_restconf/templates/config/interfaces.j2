@@ -1,0 +1,226 @@
+{%- macro get_ospf_network_type(net_type) -%}
+    {%- set types = {"point-to-point":"p2p"} -%}
+    {{ types[net_type] | default("p2p")}}
+{%- endmacro -%}
+{
+    "intf-items": {
+        "lb-items": {
+            "LbRtdIf-list": [
+                {%- set comma1 = joiner(",") %}
+                {%- for iface in nexus.interfaces.loopback | default([]) %}{{ comma1() }}
+                {
+                    "id": "{{ iface.id }}"
+                }
+                {%- endfor %}
+
+            ]
+        },
+        "phys-items": {
+            "PhysIf-list": [
+                {%- set comma1 = joiner(",") %}
+                {%- for iface in nexus.interfaces.physical | default([]) %}{{ comma1() }}
+
+                {
+                    "id": "eth{{ iface.id }}",
+                    "userCfgdFlags": "admin_state",
+                    {%- set comma2 = joiner(",") %}
+                    {%- if iface.medium is defined %}{{ comma2() }}
+                    "medium": "{{ iface.medium }}"
+                    {%- endif %}
+                    {%- if iface.mtu is defined %}{{ comma2() }}
+                    "mtu": "{{ iface.mtu }}"
+                    {%- endif -%}
+                    {%- if iface.unnumbered is defined or iface.ip_address is defined %}{{ comma2() }}
+                    "layer": "Layer3"
+                    {%- endif %}
+                    {%- if iface.switchport is defined and iface.switchport == "enabled" %}{{ comma2() }}
+                    "mode": "{{ iface.switchport_mode }}",
+                    "layer": "Layer2",
+                    "accessVlan": "vlan-{{ iface.switchport_vlan }}"
+                    {%- endif %}
+                   
+                }
+                {%- endfor %}
+
+            ]
+        }
+        {%- if nexus.interfaces.svis is defined -%}
+        ,
+        "svi-items": {
+            "If-list": [
+                {%- set comma1 = joiner(",") %}
+                {%- for iface in nexus.interfaces.svis | default([]) %}{{ comma1() }}
+
+                {
+                    "id": "vlan{{ iface.id }}",
+                    "adminSt": "up",
+                    "vlanId": "{{ iface.id }}",
+                    {% if iface.vrf is defined -%}
+                    "rtvrfMbr-items": {
+                        "tDn": "/System/inst-items/Inst-list[name='{{ iface.vrf }}']"
+                    }
+                    {% endif %}
+
+                }
+                {%- endfor %}
+
+            ]
+        }
+        {% endif %}
+
+    },
+    "ospf-items": {
+        "adminSt": "enabled",
+        "inst-items": {
+            "Inst-list": [
+                {%- set comma1 = joiner(",") %}
+                {% for iface in nexus.interfaces.physical | default([]) %}
+                {% if iface.ospf is defined %}{{ comma1() }}
+                {
+                    "name": "{{ iface.ospf.name }}",
+                    "adminSt": "enabled",
+                    "dom-items": {
+                        "Dom-list": [
+                            {
+                                "name": "default",
+                                "adminSt": "enabled",
+                                "if-items": {
+                                    "If-list": [
+                                        {
+                                            "id": "eth{{ iface.id }}",
+                                            "adminSt": "enabled",
+                                            "area": "{{ iface.ospf.area }}"
+                                            {% if iface.ospf.network_type is defined %},
+                                            "nwT": "{{ get_ospf_network_type(iface.ospf.network_type) }}"
+                                            {% endif %}
+
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+                {% endif %}
+                {%- endfor %}
+                {% for iface in nexus.interfaces.loopback | default([]) %}
+                {% if iface.ospf is defined %}{{ comma1() }}
+                {
+                    "name": "{{ iface.ospf.name }}",
+                    "adminSt": "enabled",
+                    "dom-items": {
+                        "Dom-list": [
+                            {
+                                "name": "default",
+                                "adminSt": "enabled",
+                                "if-items": {
+                                    "If-list": [
+                                        {
+                                            "id": "{{ iface.id }}",
+                                            "adminSt": "enabled",
+                                            "area": "{{ iface.ospf.area }}"
+                                            {% if iface.ospf.network_type is defined %},
+                                            "nwT": "{{ get_ospf_network_type(iface.ospf.network_type) }}"
+                                            {% endif %}
+
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+                {% endif %}
+                {%- endfor %}
+
+            ]
+        }
+    },
+    "pim-items": {
+        "inst-items": {
+            "dom-items": {
+                "Dom-list": {
+                    "name": "default",
+                    "if-items": {
+                        "If-list": [
+                            {%- set comma1 = joiner(",") %}
+                            {%- for iface in nexus.interfaces.physical | default([]) %}
+                            {% if iface.pim is defined %}{{ comma1() }}
+                            {
+                                "id": "eth{{iface.id}}",
+                                "pimSparseMode": "true"
+                            }
+                            {% endif %}
+                            {%- endfor %}
+
+                            {%- for iface in nexus.interfaces.loopback | default([]) %}
+                            {% if iface.pim is defined %}{{ comma1() }}
+                            {
+                                "id": "{{iface.id}}",
+                                "pimSparseMode": "true"
+                            }
+                            {% endif %}
+                            {%- endfor %}
+
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "ipv4-items": {
+        "inst-items": {
+            "dom-items": {
+                "Dom-list": [
+                    {
+                        "name": "default",
+                        "if-items": {
+                            "If-list": [
+                                {%- set comma1 = joiner(",") %}
+                                {% for iface in nexus.interfaces.physical | default([]) %}
+                                {% if iface.unnumbered is defined %}{{ comma1() }}
+                                {
+                                    "id": "eth{{ iface.id }}",
+                                    "unnumbered": "{{ iface.unnumbered }}"
+                                }
+                                {% endif %}
+                                {%- endfor %}
+
+                                {%- for iface in nexus.interfaces.svis | default([]) %}{{ comma1() }}    
+                                {
+                                    "id": "vlan{{ iface.id }}"
+                                    {% if iface.ip_address is defined %},
+                                    "addr-items": {
+                                        "Addr-list": {
+                                            "addr": "{{ iface.ip_address }}/{{ iface.mask }}"
+                                        }
+                                    }
+                                    {% endif %}
+                                    {%- if iface.ip_forward is defined %},
+                                    "forward": "enabled"
+                                    {% endif %}
+                                }
+                                {%- endfor %}
+
+                                {%- for iface in nexus.interfaces.loopback | default([]) %}{{ comma1() }}  
+                                {
+                                    "id": "{{ iface.id }}"
+                                    {% if iface.ip_address is defined -%},
+                                    "addr-items": {
+                                        "Addr-list": {
+                                            "addr": "{{ iface.ip_address }}/32"
+                                        }
+                                    }
+                                    {% endif %}
+                                }
+                                {%- endfor %}
+
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+   
+}

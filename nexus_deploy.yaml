@@ -1,0 +1,17 @@
+---
+- name: Configure NX-OS VXLAN-EVPN Fabric via RESTCONF
+  hosts: nexus
+  gather_facts: false
+  vars:
+    nxos_provider:
+      username: "{{ username }}"
+      password: "{{ password }}"
+      timeout: 100
+      host: "{{ nexus_host }}"
+
+  tasks:
+
+    - name: Configure Nexus
+      include_role:
+        name: nexus_manage_restconf
+        tasks_from: nexus_deploy

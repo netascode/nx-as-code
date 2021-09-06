@@ -1,0 +1,38 @@
+---
+  - name: Load Variables
+    include_vars:
+      dir: ./
+
+  - name: Create Config Directory
+    file:
+      path: rendered/config_restconf/{{ nexus.hostname }}
+      state: directory
+
+  - name: Generate Nexus Config
+    template:
+      src: config/{{ object.template }}.j2
+      dest: rendered/config_restconf/{{ nexus.hostname }}/{{ object.template }}.{{ object.format | default('json')}}
+    when: nexus.type in object.node_types
+    loop: '{{ objects }}'
+    loop_control:
+      loop_var: object
+
+  - name: Push Configuration
+    uri:
+      url: https://{{ nexus_host }}/restconf/data/Cisco-NX-OS-device:System
+      method: PATCH
+      user: "{{ username }}"
+      password: "{{ password }}"
+      force_basic_auth: yes
+      validate_certs: no
+      src: rendered/config_restconf/{{ nexus.hostname }}/{{ object.template }}.{{ object.format | default('json')}}
+      headers:
+        Content-Type: application/yang.data+{{ object.format | default('json')}}
+      status_code:
+        - 200
+        - 204
+    ignore_errors: yes
+    when: nexus.type in object.node_types
+    loop: '{{ objects }}'
+    loop_control:
+      loop_var: object

@@ -1,0 +1,71 @@
+---
+  - name: Load Variables
+    include_vars:
+      dir: ./
+
+  - name: Delete Output Test Directory
+    file:
+      path: test_results
+      state: absent
+    run_once: true
+
+  - name: Create Test Directory Host
+    file:
+      path: rendered/test_restconf/{{ nexus.hostname }}
+      state: directory
+
+  - name: Create Output Test Directory
+    file:
+      path: test_results/{{ nexus.hostname }}
+      state: directory
+
+  - name: Render Nexus Tests
+    template:
+      src: "test/{{ object.template }}.j2"
+      dest: "rendered/test_restconf/{{ nexus.hostname }}/{{ object.template }}.robot"
+    when: nexus.type in object.node_types and object.test == True
+    loop: '{{ objects }}'
+    loop_control:
+      loop_var: object
+
+  - name: Test Nexus
+    command:
+      cmd: "robot --noncritical non-critical --RunEmptySuite -d test_results/{{ nexus.hostname }} -o {{ object.template }}_output.xml -l {{ object.template }}_log.html -r {{ object.template }}_report.html rendered/test_restconf/{{ nexus.hostname }}/{{ object.template }}.robot"
+    when: nexus.type in object.node_types and object.test == True
+    loop: '{{ objects }}'
+    loop_control:
+      loop_var: object
+
+  - name: Find Protocols Test Reports
+    find:
+      paths: test_results/{{ nexus.hostname }}
+      patterns: '.*output.xml$'
+      use_regex: yes
+      recurse: yes
+      depth: 2
+    register: FILES
+
+  - name: Render Report per device
+    command:
+      cmd: "rebot --noncritical non-critical --ProcessEmptySuite -N {{ nexus.hostname }} -d test_results -o {{ nexus.hostname }}_output.xml -l {{ nexus.hostname }}_log.html -r {{ nexus.hostname }}_report.html -x {{ nexus.hostname }}_xunit.xml {{ FILES | json_query('files[*].path') | join(' ') }}"
+    when: '(FILES | length) > 0'
+    ignore_errors: yes
+
+
+  - name: Find Nexus Test Reports
+    find:
+      paths: test_results/
+      patterns: '.*output.xml$'
+      use_regex: yes
+      recurse: yes
+      depth: 1
+    run_once: true
+    register: FILES
+
+
+  - name: Render Final Report
+    command:
+      cmd: "rebot --noncritical non-critical --ProcessEmptySuite -N NEXUS -d test_results -o nexus_output.xml -l nexus_log.html -r nexus_report.html -x nexus_xunit.xml {{ FILES | json_query('files[*].path') | join(' ') }}"
+    when: '(FILES | length) > 0'
+    ignore_errors: yes
+    run_once: true

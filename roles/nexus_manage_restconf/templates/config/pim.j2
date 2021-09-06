@@ -1,0 +1,35 @@
+{% if nexus.pim is defined -%}
+{% set pim = nexus.pim %}
+{% if pim.rp_address is defined -%}
+{
+    "pim-items": {
+        "inst-items": {
+            "dom-items": {
+                "Dom-list": [
+                    {
+                        "name": "default",
+                        "staticrp-items": {
+                            "rp-items": {
+                                "StaticRP-list": [
+                                    {
+                                        "addr": "{{ pim.rp_address }}/32",
+                                        "rpgrplist-items": {
+                                            "RPGrpList-list": [
+                                                {
+                                                    "grpListName": "224.0.0.0/4",
+                                                    "bidir": "false"
+                                                }
+                                            ]
+                                        }      
+                                    }                          
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
+{% endif -%}
+{% endif -%}

@@ -1,0 +1,17 @@
+{
+    "bd-items": {
+        "bd-items": {
+            "BD-list": [
+                {%- set comma1 = joiner(",") %}
+                {%- for vlan in nexus.vlans | default([]) %}{{ comma1() }}
+                {
+                    "fabEncap": "vlan-{{ vlan.id }}",
+                    "BdState": "active",
+                    "accEncap": "vxlan-{{ vlan.vni }}"
+                }
+                {%- endfor %}
+
+            ]
+        }
+    }
+}

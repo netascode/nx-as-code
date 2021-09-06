@@ -1,0 +1,4 @@
+---
+snmp:
+  communities:
+    - name: mycommunity

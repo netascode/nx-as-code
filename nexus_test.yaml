@@ -1,0 +1,11 @@
+---
+- name: Test NX-OS VXLAN-EVPN Fabric via RESTCONF
+  hosts: nexus
+  gather_facts: false
+
+  tasks:
+
+    - name: Test Nexus
+      include_role:
+        name: nexus_manage_restconf
+        tasks_from: nexus_test

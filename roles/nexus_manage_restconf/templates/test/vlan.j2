@@ -1,0 +1,26 @@
+*** Settings ***
+# Importing test libraries, resource files and variable files.
+Documentation   Verify NX-OS VLAN Operation
+Default Tags    nx-os   operational   non-critical   
+Library               RequestsLibrary
+Library               Collections
+Library               ../../../robot_lib/JsonpathLibrary.py
+
+*** Variables ***
+${user} =  {{ username }}
+${passwd} =  {{ password }}
+&{headers} =  Accept=application/yang.data+json
+
+
+*** Test Cases ***
+Get VLAN Information
+    ${auth}=  Create List  ${user}  ${passwd}
+    Create Session    my_session   https://{{ nexus_host }}   verify=False   debug=3   headers=${headers}   auth=${auth}
+    ${response}=    GET On Session    my_session   /restconf/data/Cisco-NX-OS-device:System/bd-items
+    Set Global Variable   ${response}
+
+{% for vlan in nexus.vlans | default([]) %}
+Verify VLAN ID {{ vlan.id }}
+    ${vlan}    Get Items By Path    ${response.json()}    $.bd-items.bd-items.BD-list[?(@.fabEncap == 'vlan-{{ vlan.id }}')].operSt
+    Should Be Equal As Strings   ${vlan}   "up"
+{% endfor %}

@@ -1,0 +1,10 @@
+---
+- name: Validate NX-OS VXLAN-EVPN Fabric Input
+  hosts: nexus
+  gather_facts: false
+
+  tasks:
+    - name: Validate Nexus
+      include_role:
+        name: nexus_manage_restconf
+        tasks_from: nexus_validate

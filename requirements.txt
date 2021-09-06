@@ -1,0 +1,6 @@
+jmespath
+jsonpath
+robot
+robotframework-requests
+yamale
+paramiko

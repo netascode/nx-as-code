@@ -1,0 +1,17 @@
+---
+network:
+  children:
+    nexus:
+      hosts:
+        LEAF1:
+          nexus_host: 192.168.0.1
+          ansible_connection: local
+        LEAF2:
+          nexus_host: 192.168.0.2
+          ansible_connection: local
+        SPINE1:
+          nexus_host: 192.168.0.3
+          ansible_connection: local
+        SPINE2:
+          nexus_host: 192.168.0.4
+          ansible_connection: local

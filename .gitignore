@@ -1,0 +1,9 @@
+rendered/*
+credentials.yaml
+test_results/*
+.pabotsuitenames
+.DS_Store
+yang/
+yesterday/
+robot_lib/__pycache__/
+venv/

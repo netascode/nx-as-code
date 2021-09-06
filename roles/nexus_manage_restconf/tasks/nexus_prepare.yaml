@@ -1,0 +1,12 @@
+---
+  - name: Enable NXAPI
+    nxos_feature:
+      feature: nxapi
+      provider: "{{ nxos_provider }}"
+      state: enabled
+
+  - name: Enable RESTCONF
+    nxos_feature:
+      feature: restconf
+      provider: "{{ nxos_provider }}"
+      state: enabled

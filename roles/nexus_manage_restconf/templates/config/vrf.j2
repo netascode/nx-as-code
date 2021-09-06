@@ -1,0 +1,103 @@
+{%- macro get_bgp_af(af) -%}
+    {%- set types = {"unicast":"ucast", "evpn":"evpn"} -%}
+    {{ types[af] | default("ucast")}}
+{%- endmacro -%}
+{
+    "inst-items": {
+        "Inst-list": [
+            {%- set comma1 = joiner(",") %}
+            {%- for vrf in nexus.vrfs | default([]) %}{{ comma1() }}
+            {
+                "name": "{{ vrf.name }}",
+                "adminState": "admin-up",
+                {% if vrf.vni is defined %}
+
+                "encap": "vxlan-{{ vrf.vni }}",
+                {% endif %}
+
+                "dom-items": {
+                    "Dom-list": [
+                        {
+                            "name": "{{ vrf.name }}",
+                            {% if vrf.rd is defined and vrf.rd == "auto" -%}
+                            "rd": "rd:unknown:0:0",
+                            {% endif %}
+
+                            "af-items": {
+                                "DomAf-list": [
+                                    {%- for af in vrf.address_families | default([]) %}
+
+                                    {
+                                        "type": "{{ af.type }}-{{ get_bgp_af(af.subtype) }}",
+                                        "ctrl-items": {
+                                            {% if af.route_target is defined and af.route_target == "auto"%}
+
+                                            "AfCtrl-list": [
+                                                {
+                                                    "type": "l2vpn-evpn",
+                                                    "rttp-items": {
+                                                        "RttP-list": [
+                                                            {
+                                                                "type": "export",
+                                                                "ent-items": {
+                                                                    "RttEntry-list": [
+                                                                        {
+                                                                            "rtt": "route-target:unknown:0:0"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "type": "import",
+                                                                "ent-items": {
+                                                                    "RttEntry-list": [
+                                                                        {
+                                                                            "rtt": "route-target:unknown:0:0"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    "type": "ipv4-ucast",
+                                                    "rttp-items": {
+                                                        "RttP-list": [
+                                                            {
+                                                                "type": "import",
+                                                                "ent-items": {
+                                                                    "RttEntry-list": {
+                                                                        "rtt": "route-target:unknown:0:0"
+                                                                    }
+                                                                }
+                                                            },
+                                                            {
+                                                                "type": "export",
+                                                                "ent-items": {
+                                                                    "RttEntry-list": {
+                                                                        "rtt": "route-target:unknown:0:0"
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                            {%- endif %}
+
+                                        }
+                                    }
+                                    {%- endfor %}
+
+                                ]
+                            }                
+                        }
+                    ]
+                }  
+            }
+        {%- endfor %}
+
+        ]
+    }
+}

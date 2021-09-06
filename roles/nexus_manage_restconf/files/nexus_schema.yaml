@@ -1,0 +1,123 @@
+---
+nexus: include('nexus', required=False)
+---
+nexus:
+  interfaces: include('nexus_interfaces', required=False)
+  isis: include('nexus_isis', required=False)
+  ospf: list(include('nexus_ospf'), required=False)
+  bgp: include('nexus_bgp', required=False)
+  pim: include('nexus_pim', required=False)
+  vrfs: list(include('nexus_vrf'), required=False)
+  vlans: list(include('nexus_vlans'), required=False)
+  vxlan: include('nexus_vxlan', required=False)
+  type: enum('leaf', 'spine', required=False)
+  hostname: str(min=1, max=64)
+
+nexus_interfaces:
+  physical: list(include('nexus_interfaces_physical'), required=False)
+  loopback: list(include('nexus_interfaces_loopback'), required=False)
+  svis: list(include('nexus_interfaces_svi'), required=False)
+
+nexus_interfaces_physical:
+  id: str(min=1, max=64)
+  mtu: int(min=1, max=9216, required=False)
+  medium: enum('p2p', 'broadcast', required=False)
+  unnumbered: str(min=1, max=64, required=False)
+  switchport: enum('enabled', 'disabled', required=False)
+  switchport_mode: enum('access', 'trunk', required=False)
+  switchport_vlan: int(min=1, max=4096, required=False)
+  isis: str(min=1, max=64, required=False)
+  pim: enum('sparse-mode', required=False)
+  ospf: include('nexus_interfaces_physical_ospf', required=False)
+
+nexus_interfaces_loopback:
+  id: str(min=1, max=1000)
+  ip_address: ip(required=False)
+  isis: str(min=1, max=64, required=False)
+  pim: enum('sparse-mode', required=False)
+  ospf: include('nexus_interfaces_loopback_ospf', required=False)
+
+nexus_interfaces_svi:
+  id: int(min=1, max=4096)
+  vrf: str(min=1, max=1000, required=False)
+  ip_address: ip(required=False)
+  mask: int(min=1, max=31, required=False)
+  anycast_gateway: enum('enabled', 'disabled', required=False)
+  ip_forward: enum('enabled', 'disabled', required=False)
+
+
+nexus_ospf:
+  name: str(min=1, max=64)
+
+nexus_isis:
+  name: str(min=1, max=64)
+  address: str(min=1, max=64)
+
+nexus_pim:
+  rp_address: ip()
+
+nexus_interfaces_physical_ospf:
+  name: str(min=1, max=64)
+  area: ip()
+  network_type: enum('point-to-point', 'broadcast', required=False)
+
+nexus_interfaces_loopback_ospf:
+  name: str(min=1, max=64)
+  area: ip()
+  network_type: enum('point-to-point', 'broadcast', required=False)
+
+nexus_vrf:
+  name: str(min=1, max=64)
+  vni: int(min=1, max=49000000, required=False)
+  rd: enum('auto', 'evpn', required=False)
+  address_families: list(include('nexus_vrf_address_families'), required=False)
+
+nexus_vlans:
+  id: int(min=1, max=4096, required=False)
+  vni: int(min=1, max=49000000, required=False)
+
+nexus_vrf_address_families:
+  type: enum('ipv4', 'ipv6', 'l2vpn', required=False)
+  subtype: enum('unicast', 'evpn', required=False)
+  route_target: enum('auto', 'evpn', required=False)
+
+nexus_bgp:
+  asn: int(min=1, max=490000, required=False)
+  router_id: ip()
+  timers: include('nexus_bgp_timers', required=False)
+  address_families: list(include('nexus_bgp_address_families'), required=False)
+  neighbors: list(include('nexus_bgp_neighbors'), required=False)
+
+nexus_bgp_timers:
+  keep_alive: int(min=1, max=1000)
+  hold_on: int(min=1, max=1000)
+
+nexus_bgp_address_families:
+  type: enum('ipv4', 'ipv6', 'l2vpn', required=False)
+  subtype: enum('unicast', 'evpn', required=False)
+  retain_rt: enum('all', required=False)
+
+nexus_bgp_neighbors:
+  ip_address: ip(required=False)
+  remote_asn: int(min=1, max=490000, required=False)
+  update_source: str(min=1, max=64)
+  address_families: list(include('nexus_bgp_neighbors_address_families'), required=False)
+
+nexus_bgp_neighbors_address_families:
+  type: enum('ipv4', 'ipv6', 'l2vpn', required=False)
+  subtype: enum('unicast', 'evpn', required=False)
+  send_community: enum('enabled', 'disabled', required=False)
+  route_reflector: enum('enabled', 'disabled', required=False)
+
+nexus_vxlan:
+  fabric_mac: str()
+  source: str(min=1, max=10)
+  host_reachability_protocol: enum('bgp', required=False)
+  vnis: list(include('nexus_vxlan_vnis'), required=False)
+
+nexus_vxlan_vnis:
+  id: int(min=1, max=49000000)
+  type: enum('l2', 'l3')
+  multicast: ip(required=False)
+  rd: enum('auto', required=False)
+  route_target: enum('auto', required=False)

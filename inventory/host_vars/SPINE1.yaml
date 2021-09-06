@@ -1,0 +1,79 @@
+---
+nexus:
+  type: spine
+  hostname: SPINE-1-N9K-1
+
+  interfaces:
+    physical:
+      - id: 1/3
+        switchport: disabled
+        mtu: 9216
+        medium: p2p
+        unnumbered: lo0
+        ospf:
+          name: UNDERLAY
+          area: 0.0.0.0
+          network_type: point-to-point
+        pim: sparse-mode
+      - id: 1/4
+        switchport: disabled
+        mtu: 9216
+        medium: p2p
+        unnumbered: lo0
+        ospf:
+          name: UNDERLAY
+          area: 0.0.0.0
+          network_type: point-to-point
+        pim: sparse-mode
+    loopback:
+      - id: lo0
+        ip_address: 192.168.1.1
+        ospf:
+          name: UNDERLAY
+          area: 0.0.0.0
+          network_type: point-to-point
+        pim: sparse-mode
+
+  ospf:
+    - name: UNDERLAY
+
+  bgp:
+    asn: 65001
+    router_id: 192.168.1.1
+    timers:
+      keep_alive: 7
+      hold_on: 21
+    address_families:
+      - type: ipv4
+        subtype: unicast
+      - type: l2vpn
+        subtype: evpn
+        retain_rt: all
+    neighbors:
+      - ip_address: 192.168.1.3
+        remote_asn: 65001
+        update_source: lo0
+        address_families:
+          - type: ipv4
+            subtype: unicast
+            send_community: enabled
+            route_reflector: enabled
+          - type: l2vpn
+            subtype: evpn
+            send_community: enabled
+            route_reflector: enabled
+      - ip_address: 192.168.1.4
+        remote_asn: 65001
+        update_source: lo0
+        address_families:
+          - type: ipv4
+            subtype: unicast
+            send_community: enabled
+            route_reflector: enabled
+          - type: l2vpn
+            subtype: evpn
+            send_community: enabled
+            route_reflector: enabled
+
+  pim:
+    rp_address: 192.168.1.1

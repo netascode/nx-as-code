@@ -1,0 +1,36 @@
+*** Settings ***
+# Importing test libraries, resource files and variable files.
+Documentation   Verify NX-OS BGP Operation
+Default Tags    nx-os   operational   non-critical   
+Library               RequestsLibrary
+Library               Collections
+Library               ../../../robot_lib/JsonpathLibrary.py
+
+*** Variables ***
+${user} =  {{ username }}
+${passwd} =  {{ password }}
+&{headers} =  Accept=application/yang.data+json
+
+
+*** Test Cases ***
+Get BGP Information
+    ${auth}=  Create List  ${user}  ${passwd}
+    Create Session    my_session   https://{{ nexus_host }}   verify=False   debug=3   headers=${headers}   auth=${auth}
+    ${response}=    GET On Session    my_session   /restconf/data/Cisco-NX-OS-device:System/bgp-items   
+    Set Global Variable   ${response}
+
+
+Verify BGP Default Instance 
+    ${bgp_default_name}    Get Items By Path    ${response.json()}    $.bgp-items.inst-items.dom-items.Dom-list[?(@.name == 'default')].name
+    Should Be Equal As Strings   ${bgp_default_name}   "default"  
+    ${bgp_default_oper_status}    Get Items By Path    ${response.json()}    $.bgp-items.inst-items.dom-items.Dom-list[?(@.name == 'default')].operSt
+    Should Be Equal As Strings   ${bgp_default_oper_status}   "up"
+
+{% for neigh in nexus.bgp.neighbors | default([]) %}
+Verify BGP Default Instance Neighbor {{ neigh.ip_address }}
+    ${bgp_neigh_admin_state}    Get Items By Path    ${response.json()}    $.bgp-items.inst-items.dom-items.Dom-list[?(@.name == 'default')].peer-items.Peer-list[?(@.addr == '{{ neigh.ip_address }}')].adminSt
+    Should Be Equal As Strings   ${bgp_neigh_admin_state}   "enabled"  
+    ${bgp_neigh_oper_state}    Get Items By Path    ${response.json()}    $.bgp-items.inst-items.dom-items.Dom-list[?(@.name == 'default')].peer-items.Peer-list[?(@.addr == '{{ neigh.ip_address }}')].ent-items.PeerEntry-list[?(@.addr == '{{ neigh.ip_address }}')].operSt
+    Should Be Equal As Strings   ${bgp_neigh_oper_state}   "established"  
+
+{% endfor %}

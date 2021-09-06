@@ -1,0 +1,13 @@
+{%- for instance in nexus.ospf | default([]) %}
+{
+    "ospf-items": {
+        "inst-items": {
+            "Inst-list": [
+                {
+                    "name": "{{ instance.name }}"
+                }
+            ]
+        }
+    }
+}
+{%- endfor %}

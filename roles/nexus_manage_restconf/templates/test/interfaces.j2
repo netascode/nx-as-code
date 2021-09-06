@@ -1,0 +1,39 @@
+*** Settings ***
+# Importing test libraries, resource files and variable files.
+Documentation   Verify NX-OS Interfaces Operation
+Default Tags    nx-os   operational   non-critical   
+Library               RequestsLibrary
+Library               Collections
+Library               ../../../robot_lib/JsonpathLibrary.py
+
+*** Variables ***
+${user} =  {{ username }}
+${passwd} =  {{ password }}
+&{headers} =  Accept=application/yang.data+json
+
+
+*** Test Cases ***
+Get Interaces Information
+    ${auth}=  Create List  ${user}  ${passwd}
+    Create Session    my_session   https://{{ nexus_host }}   verify=False   debug=3   headers=${headers}   auth=${auth}
+    ${response}=    GET On Session    my_session   /restconf/data/Cisco-NX-OS-device:System/intf-items
+    Set Global Variable   ${response}
+
+
+{% for iface in nexus.interfaces.physical | default([]) %}
+Verify Interface {{ iface.id }}
+    ${iface_state}    Get Items By Path    ${response.json()}    $..phys-items.PhysIf-list[?(@.id == 'eth{{ iface.id}}')].phys-items.operSt
+    Should Be Equal As Strings   ${iface_state}   "up"
+    ${iface_in_error}    Get Items By Path    ${response.json()}    $..phys-items.PhysIf-list[?(@.id == 'eth{{ iface.id}}')].dbgIfIn-items.errors
+    Should Be Equal As Strings   ${iface_in_error}   "0"
+    ${iface_in_error}    Get Items By Path    ${response.json()}    $..phys-items.PhysIf-list[?(@.id == 'eth{{ iface.id}}')].dbgIfOut-items.errors
+    Should Be Equal As Strings   ${iface_in_error}   "0"
+
+{% endfor%}
+
+{% for iface in nexus.interfaces.svis | default([]) %}
+Verify Interface VLAN {{ iface.id }}
+    ${iface_state}    Get Items By Path    ${response.json()}    $..svi-items.If-list[?(@.id == 'vlan{{ iface.id}}')].operSt
+    Should Be Equal As Strings   ${iface_state}   "up"
+
+{% endfor%}

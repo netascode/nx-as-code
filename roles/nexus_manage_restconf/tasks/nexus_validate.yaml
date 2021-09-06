@@ -1,0 +1,11 @@
+---
+- name: Validate Nexus Data
+  vars:
+    path: '{{ inventory_dir }}/host_vars'
+
+  block:
+
+    - name: Validate Nexus Data
+      script: "validate_data.py '{{ role_path }}/files/nexus_schema.yaml' {{ path }}/{{ inventory_hostname }}.yaml"
+      args:
+        executable: python3

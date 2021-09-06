@@ -1,0 +1,31 @@
+*** Settings ***
+# Importing test libraries, resource files and variable files.
+Documentation   Verify NX-OS VXLAN Operation
+Default Tags    nx-os   operational   non-critical   
+Library               RequestsLibrary
+Library               Collections
+Library               ../../../robot_lib/JsonpathLibrary.py
+
+*** Variables ***
+${user} =  {{ username }}
+${passwd} =  {{ password }}
+&{headers} =  Accept=application/yang.data+json
+
+
+*** Test Cases ***
+Get NVE Information
+    ${auth}=  Create List  ${user}  ${passwd}
+    Create Session    my_session   https://{{ nexus_host }}   verify=False   debug=3   headers=${headers}   auth=${auth}
+    ${response}=    GET On Session    my_session   /restconf/data/Cisco-NX-OS-device:System/eps-items   
+    Set Global Variable   ${response}
+
+Verifiy NVE State
+    ${nve}    Get Items By Path    ${response.json()}    $..operState
+    Should Be Equal As Strings   ${nve}   "up"
+
+
+{% for vni in nexus.vxlan.vnis | default([]) %}
+Verifiy VNI {{ vni.id }}
+    ${vni}    Get Items By Path    ${response.json()}    $..OperNw-list[?(@.vni == {{ vni.id }})].state
+    Should Be Equal As Strings   ${vni}   "Up"
+{% endfor %}

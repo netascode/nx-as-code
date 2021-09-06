@@ -1,0 +1,76 @@
+{%- macro get_bgp_af(af) -%}
+    {%- set types = {"unicast":"ucast", "evpn":"evpn"} -%}
+    {{ types[af] | default("ucast")}}
+{%- endmacro -%}
+{% if nexus.bgp is defined %}
+{% set bgp = nexus.bgp %}
+{
+    "bgp-items": {
+        "adminSt": "enabled",
+        "name": "bgp",
+        "inst-items": {
+            "asn": "65001",
+            "name": "bgp-Inst",
+            "dom-items": {
+                "Dom-list": {
+                    "name": "default",
+                    "af-items": {
+                        "DomAf-list": [
+                            {%- set comma1 = joiner(",") %}
+                            {%- for af in bgp.address_families | default([]) %}{{ comma1() }}
+                            {
+                                "type": "{{ af.type }}-{{ get_bgp_af(af.subtype) }}"
+                                {% if af.retain_rt is defined %},                                
+                                "retainRttAll": "enabled"
+                                {% endif %} 
+                            }
+                            {%- endfor %}
+
+                        ]
+                    },
+                    {% if bgp.timers is defined -%}
+                    "holdIntvl": {{ bgp.timers.hold_on }},
+                    "kaIntvl": {{ bgp.timers.keep_alive }},
+                    {% endif %} 
+                    "peer-items": {
+                        "Peer-list": [
+                            {%- set comma1 = joiner(",") %}
+                            {%- for neigh in bgp.neighbors | default([]) %}{{ comma1() }}
+                            {
+                                "addr": "{{ neigh.ip_address }}",
+                                "adminSt": "enabled",
+                                "asn": "{{ neigh.remote_asn}}",
+                                {%- if neigh.update_source is defined %}
+
+                                "srcIf": "{{ neigh.update_source }}",
+                                {% endif %}  
+                                "af-items": {
+                                    "PeerAf-list": [
+                                        {%- set comma2 = joiner(",") %}
+                                        {%- for af in neigh.address_families | default([]) %}{{ comma2() }}
+                                        {
+                                            "type": "{{ af.type }}-{{ get_bgp_af(af.subtype) }}",
+                                            "name": "bgp-PeerAf"
+                                            {% if af.route_reflector is defined and af.route_reflector == "enabled" %},
+                                            "ctrl": "rr-client"
+                                            {% endif %}                                     
+                                            {% if af.send_community is defined and af.send_community == "enabled" %},
+                                            "sendComExt": "enabled",
+                                            "sendComStd": "enabled"
+                                            {% endif %}      
+                                        }
+                                        {%- endfor %}
+
+                                    ]
+                                }
+                            }
+                            {%- endfor %}
+
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
+{% endif %}

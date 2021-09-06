@@ -1,0 +1,50 @@
+{
+    "fm-items": {
+        {%- set comma1 = joiner(",") %}
+        {% if nexus.bgp is defined %}{{ comma1() }}
+        "bgp-items": {
+            "adminSt": "enabled"
+        }
+        {%- endif %}
+        {%- if nexus.pim is defined %}{{ comma1() }}
+        "pim-items": {
+            "adminSt": "enabled"
+        }
+        {%- endif %}
+        {%- if nexus.isis is defined %}{{ comma1() }}
+        {%- endif %}
+        {%- if nexus.ospf is defined %}{{ comma1() }}
+        "ospf-items": {
+            "adminSt": "enabled"
+        }
+        {%- endif %}
+        {%- for af in nexus.bgp.address_families | default([] )-%}
+        {%- if af.subtype == "evpn"%}{{ comma1() }}
+        "evpn-items": {
+            "adminSt": "enabled"
+        }
+        {%- endif %}
+        {%- endfor %}
+
+        {%- if nexus.vxlan is defined %}{{ comma1() }}
+        "vnsegment-items": {
+            "adminSt": "enabled"
+        },
+        "nvo-items": {
+            "adminSt": "enabled"
+        }
+        {%- endif %}
+        {%- if nexus.interfaces.svis is defined %}{{ comma1() }}
+        "ifvlan-items": {
+            "adminSt": "enabled"
+        }
+        {%- endif %}
+        
+    }
+}
+
+
+
+
+
+

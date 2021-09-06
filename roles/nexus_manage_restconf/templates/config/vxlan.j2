@@ -1,0 +1,107 @@
+{
+    "evpn-items": {
+        "adminSt": "enabled",
+        "bdevi-items": {
+            "BDEvi-list": [
+                {%- set comma1 = joiner(",") %}
+                {%- for vni in nexus.vxlan.vnis | default([]) %}
+                {% if vni.type == "l2" %}{{ comma1() }}
+
+                {
+                    "encap": "vxlan-{{ vni.id }}",
+                    {% if vni.rd is defined and vni.rd == "auto" %}
+
+                    "rd": "rd:unknown:0:0",
+                    {% endif %}
+                    {% if vni.route_target is defined and vni.route_target == "auto" -%}
+                    "rttp-items": {
+                        "RttP-list": [
+                            {
+                                "type": "import",
+                                "ent-items": {
+                                    "RttEntry-list": {
+                                        "rtt": "route-target:unknown:0:0"
+                                    }
+                                }
+                            },
+                            {
+                                "type": "export",
+                                "ent-items": {
+                                    "RttEntry-list": {
+                                        "rtt": "route-target:unknown:0:0"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                    {% endif %}
+
+                }
+                {% endif %}
+                {%- endfor %}
+
+            ]
+
+        }
+    },
+    "eps-items": {
+        "epId-items": {
+            "Ep-list": [
+                {
+                    "epId": "1",
+                    "adminSt": "enabled",
+                    {% if nexus.vxlan.host_reachability_protocol is defined %}
+
+                    "hostReach": "{{ nexus.vxlan.host_reachability_protocol  }}",
+                    {% endif %}
+
+                    "sourceInterface": "{{ nexus.vxlan.source }}",
+                    "nws-items": {
+                        "vni-items": [
+                            {%- set comma1 = joiner(",") %}
+                            {%- for vni in nexus.vxlan.vnis | default([]) %}
+                            {%- if vni.type == "l2" %}{{ comma1() }}
+                            {
+                                "Nw-list": {
+                                "vni": "{{ vni.id }}",
+                                "mcastGroup": "{{ vni.multicast }}"
+                                }
+                            }
+                            {%- endif -%}
+                            {%- if vni.type == "l3" -%}{{ comma1() }}
+                            {
+                                "Nw-list": {
+                                "vni": "{{ vni.id }}",
+                                "associateVrfFlag": "true"
+                                }
+                            }
+                            {% endif %}
+                            {%- endfor%}
+
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    "hmm-items": {
+        "fwdinst-items": {
+        "amac": "{{ nexus.vxlan.fabric_mac }}",
+            "if-items": {
+                "FwdIf-list": [
+                    {%- set comma1 = joiner(",") %}
+                    {%- for iface in nexus.interfaces.svis | default([]) %}
+                    {% if iface.anycast_gateway is defined and iface.anycast_gateway == "enabled" -%}{{ comma1() }}
+                    {
+                        "id": "vlan{{ iface.id }}",
+                        "adminSt": "enabled",
+                        "mode": "anycastGW"
+                    }
+                    {% endif %}
+                    {%- endfor%}
+
+                ]
+            }
+        }
+    }    
+}

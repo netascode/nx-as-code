@@ -1,0 +1,53 @@
+---
+objects:
+  - name: NX-OS Features
+    template: features
+    test: False
+    node_types:
+      - spine
+      - leaf
+  - name: Management
+    template: management
+    test: False
+    node_types:
+      - spine
+      - leaf
+  - name: Physical & Logical Interfaces (Eth, Lo, SVI)
+    template: interfaces
+    test: True
+    node_types:
+      - spine
+      - leaf
+  - name: OSPF Protocol - Routing
+    template: ospf
+    test: True
+    node_types:
+      - spine
+      - leaf
+  - name: PIM Protocol - Multicast
+    template: pim
+    test: True
+    node_types:
+      - spine
+      - leaf
+  - name: BGP Protocol - Routing
+    template: bgp
+    test: True
+    node_types:
+      - spine
+      - leaf
+  - name: VLAN
+    template: vlan
+    test: True
+    node_types:
+      - leaf
+  - name: VRF
+    template: vrf
+    test: True
+    node_types:
+      - leaf
+  - name: VXLAN
+    test: True
+    template: vxlan
+    node_types:
+      - leaf
