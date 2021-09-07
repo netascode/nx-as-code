@@ -1,5 +1,7 @@
 Implement NetDevOps practices on Nexus Infrastructure:  NX-OS Management using RESTCONF
 =====================================================================================
+[![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/netascode/nexus-as-code)
+
 A modular Ansible role to validate, configure and test VXLAN-EVPN Fabrics on NX-OS switches from a Jenkins Pipeline
 
 ## Use Case Description
