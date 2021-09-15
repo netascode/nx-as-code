@@ -8,7 +8,7 @@ A modular Ansible role to validate, configure and test VXLAN-EVPN Fabrics on NX-
 
 Automate the management of your Nexus-based Data Center Infrastructure leveraging Open Source Tools. This repository contains an [Ansible](https://www.ansible.com/) role named the `nexus_manage_restconf` which validates, configures and tests the configurations deployed on you Nexus switches.
 
-        ![alt text ](images/netdevops.png?raw=true)
+      |  ![alt text ](images/netdevops.png?raw=true)  |
 
 
 The code uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/) Templates to dynamically render JSON files compliant with the NX-OS [OpenConfig](https://www.openconfig.net/) [YANG](https://github.com/YangModels/yang/tree/master/vendor/cisco/nx) Model. The JSON payloads are afterwards sent via HTTPS to the Nexus [RESTCONF](https://datatracker.ietf.org/doc/html/rfc8040) API. The code also uses Jinja2 Templates to dynamically render [Robot Framework](https://robotframework.org/) test suites which verify the operational status of the different protocols configured on the Nexus switches.
