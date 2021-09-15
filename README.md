@@ -9,6 +9,7 @@ A modular Ansible role to validate, configure and test VXLAN-EVPN Fabrics on NX-
 Automate the management of your Nexus-based Data Center Infrastructure leveraging Open Source Tools. This repository contains an [Ansible](https://www.ansible.com/) role named the `nexus_manage_restconf` which validates, configures and tests the configurations deployed on you Nexus switches.
 
 ![alt text ><](images/netdevops.png?raw=true)
+
 img[alt$="><"] {
   display: block;
   max-width: 100%;
